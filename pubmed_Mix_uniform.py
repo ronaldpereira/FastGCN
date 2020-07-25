@@ -1,13 +1,14 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
-import time
-import tensorflow as tf
-import scipy.sparse as sp
 import os
+import time
 
-from utils import *
+import scipy.sparse as sp
+import tensorflow as tf
+from sklearn.metrics import f1_score
+
 from models import GCN_APPRO_Mix
+from utils import *
 
 # Set random seed
 seed = 123
@@ -36,6 +37,7 @@ def construct_feeddict_forMixlayers(AXfeatures, support, labels, placeholders):
     feed_dict.update({placeholders['num_features_nonzero']: AXfeatures[1].shape})
     return feed_dict
 
+
 def iterate_minibatches_listinputs(inputs, batchsize, shuffle=False):
     assert inputs is not None
     numSamples = inputs[0].shape[0]
@@ -52,7 +54,8 @@ def iterate_minibatches_listinputs(inputs, batchsize, shuffle=False):
 
 def main(rank1):
 
-    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(FLAGS.dataset)
+    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(
+        FLAGS.dataset)
 
     train_index = np.where(train_mask)[0]
     adj_train = adj[train_index, :][:, train_index]
@@ -63,21 +66,18 @@ def main(rank1):
     test_index = np.where(test_mask)[0]
     y_test = y_test[test_index]
 
-    train_val_index = np.concatenate([train_index, val_index],axis=0)
-    train_test_idnex = np.concatenate([train_index, test_index],axis=0)
-
+    train_val_index = np.concatenate([train_index, val_index], axis=0)
+    train_test_idnex = np.concatenate([train_index, test_index], axis=0)
 
     numNode_train = adj_train.shape[0]
     # print("numNode", numNode)
-
 
     if FLAGS.model == 'gcn_mix':
         normADJ_train = nontuple_preprocess_adj(adj_train)
         # normADJ = nontuple_preprocess_adj(adj)
 
-
-        normADJ_val = nontuple_preprocess_adj(adj[train_val_index,:][:,train_val_index])
-        normADJ_test = nontuple_preprocess_adj(adj[train_test_idnex,:][:,train_test_idnex])
+        normADJ_val = nontuple_preprocess_adj(adj[train_val_index, :][:, train_val_index])
+        normADJ_test = nontuple_preprocess_adj(adj[train_test_idnex, :][:, train_test_idnex])
 
         num_supports = 2
         model_func = GCN_APPRO_Mix
@@ -94,14 +94,14 @@ def main(rank1):
     nonzero_feature_number = len(np.nonzero(features)[0])
     nonzero_feature_number_train = len(np.nonzero(train_features)[0])
 
-
     # Define placeholders
     placeholders = {
-        'support': tf.sparse_placeholder(tf.float32) ,
+        'support': tf.sparse_placeholder(tf.float32),
         'AXfeatures': tf.placeholder(tf.float32, shape=(None, features.shape[1])),
         'labels': tf.placeholder(tf.float32, shape=(None, y_train.shape[1])),
         'dropout': tf.placeholder_with_default(0., shape=()),
-        'num_features_nonzero': tf.placeholder(tf.int32)  # helper variable for sparse dropout
+        'num_features_nonzero':
+            tf.placeholder(tf.int32)  # helper variable for sparse dropout
     }
 
     # Create model
@@ -114,8 +114,8 @@ def main(rank1):
     def evaluate(features, support, labels, placeholders):
         t_test = time.time()
         feed_dict_val = construct_feeddict_forMixlayers(features, support, labels, placeholders)
-        outs_val = sess.run([model.loss, model.accuracy], feed_dict=feed_dict_val)
-        return outs_val[0], outs_val[1], (time.time() - t_test)
+        outs_val = sess.run([model.loss, model.accuracy, model.outputs], feed_dict=feed_dict_val)
+        return outs_val[0], outs_val[1], outs_val[2], (time.time() - t_test)
 
     # Init variables
     sess.run(tf.global_variables_initializer())
@@ -136,7 +136,9 @@ def main(rank1):
         t1 = time.time()
 
         n = 0
-        for batch in iterate_minibatches_listinputs([normADJ_train, y_train], batchsize=1024, shuffle=True):
+        for batch in iterate_minibatches_listinputs([normADJ_train, y_train],
+                                                    batchsize=1024,
+                                                    shuffle=True):
             [normADJ_batch, y_train_batch] = batch
 
             p1 = column_prop(normADJ_batch)
@@ -156,16 +158,15 @@ def main(rank1):
                 features_inputs = train_features[q1, :]  # selected nodes for approximation
             # Construct feed dictionary
             feed_dict = construct_feeddict_forMixlayers(features_inputs, support1, y_train_batch,
-                                            placeholders)
+                                                        placeholders)
             feed_dict.update({placeholders['dropout']: FLAGS.dropout})
 
             # Training step
             outs = sess.run([model.opt_op, model.loss, model.accuracy], feed_dict=feed_dict)
-            n = n +1
-
+            n = n + 1
 
         # Validation
-        cost, acc, duration = evaluate(val_features, valSupport, y_val,  placeholders)
+        cost, acc, _, duration = evaluate(val_features, valSupport, y_val, placeholders)
         cost_val.append(cost)
 
         # if epoch > 50 and acc>maxACC:
@@ -177,22 +178,32 @@ def main(rank1):
         #       "train_acc=", "{:.5f}".format(outs[2]), "val_loss=", "{:.5f}".format(cost),
         #       "val_acc=", "{:.5f}".format(acc), "time per batch=", "{:.5f}".format((time.time() - t1)/n))
 
-        if epoch > FLAGS.early_stopping and np.mean(cost_val[-2:]) > np.mean(cost_val[-(FLAGS.early_stopping + 1):-1]):
+        if epoch > FLAGS.early_stopping and np.mean(cost_val[-2:]) > np.mean(
+                cost_val[-(FLAGS.early_stopping + 1):-1]):
             # print("Early stopping...")
             break
-
 
     train_duration = time.time() - t
     # Testing
     # if os.path.exists("tmp/pubmed_MixModel.ckpt"):
     #     saver.restore(sess, "tmp/pubmed_MixModel.ckpt")
-    test_cost, test_acc, test_duration = evaluate(test_features, testSupport, y_test,
-                                                  placeholders)
-    print("rank1 = {}".format(rank1), "cost=", "{:.5f}".format(test_cost),
-          "accuracy=", "{:.5f}".format(test_acc), "training time per epoch=", "{:.5f}".format(train_duration/(epoch+1)),
-          "test time=", "{:.5f}".format(test_duration))
+    test_cost, test_acc, test_y_pred, test_duration = evaluate(test_features, testSupport, y_test,
+                                                               placeholders)
+    print("rank1 = {}".format(rank1), "cost=", "{:.5f}".format(test_cost), "accuracy=",
+          "{:.5f}".format(test_acc), "training time per epoch=",
+          "{:.5f}".format(train_duration / (epoch + 1)), "test time=",
+          "{:.5f}".format(test_duration))
 
-if __name__=="__main__":
+    test_y_pred = np.array(list(map(lambda x: not (x[0] > x[1]), test_y_pred)))
+    y_test = np.array(list(map(lambda x: not (x[0]), y_test)))
+
+    print("F1-Score of non-Frauds: %f" %
+          f1_score(y_test, test_y_pred, average='binary', pos_label=False))
+    print("F1-Score of Frauds: %f" % f1_score(y_test, test_y_pred, average='binary'))
+    print("F1-Score macro: %f" % f1_score(y_test, test_y_pred, average='macro'))
+
+
+if __name__ == "__main__":
     print("DATASET:", FLAGS.dataset)
     main(5)
     # for k in [25, 50, 100, 200, 400]:

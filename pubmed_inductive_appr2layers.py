@@ -1,12 +1,13 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 import time
-import tensorflow as tf
-import scipy.sparse as sp
 
+import scipy.sparse as sp
+import tensorflow as tf
+from sklearn.metrics import f1_score
+
+from models import GCN, GCN_APPRO, MLP
 from utils import *
-from models import GCN, MLP, GCN_APPRO
 
 # Set random seed
 seed = 123
@@ -41,8 +42,10 @@ def iterate_minibatches_listinputs(inputs, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield [input[excerpt] for input in inputs]
 
+
 def main(rank1, rank0):
-    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(FLAGS.dataset)
+    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(
+        FLAGS.dataset)
 
     train_index = np.where(train_mask)[0]
     adj_train = adj[train_index, :][:, train_index]
@@ -56,7 +59,6 @@ def main(rank1, rank0):
     # adj_test = adj[test_index, :][:, test_index]
     test_mask = test_mask[test_index]
     y_test = y_test[test_index]
-
 
     numNode_train = adj_train.shape[0]
     # print("numNode", numNode)
@@ -83,7 +85,8 @@ def main(rank1, rank0):
         'labels': tf.placeholder(tf.float32, shape=(None, y_train.shape[1])),
         'labels_mask': tf.placeholder(tf.int32),
         'dropout': tf.placeholder_with_default(0., shape=()),
-        'num_features_nonzero': tf.placeholder(tf.int32)  # helper variable for sparse dropout
+        'num_features_nonzero':
+            tf.placeholder(tf.int32)  # helper variable for sparse dropout
     }
 
     # Create model
@@ -96,8 +99,8 @@ def main(rank1, rank0):
     def evaluate(features, support, labels, mask, placeholders):
         t_test = time.time()
         feed_dict_val = construct_feed_dict(features, support, labels, mask, placeholders)
-        outs_val = sess.run([model.loss, model.accuracy], feed_dict=feed_dict_val)
-        return outs_val[0], outs_val[1], (time.time() - t_test)
+        outs_val = sess.run([model.loss, model.accuracy, model.outputs], feed_dict=feed_dict_val)
+        return outs_val[0], outs_val[1], outs_val[2], (time.time() - t_test)
 
     # Init variables
     sess.run(tf.global_variables_initializer())
@@ -116,7 +119,9 @@ def main(rank1, rank0):
         t1 = time.time()
 
         n = 0
-        for batch in iterate_minibatches_listinputs([normADJ_train, y_train, train_mask], batchsize=256, shuffle=True):
+        for batch in iterate_minibatches_listinputs([normADJ_train, y_train, train_mask],
+                                                    batchsize=256,
+                                                    shuffle=True):
             [normADJ_batch, y_train_batch, train_mask_batch] = batch
             if sum(train_mask_batch) < 1:
                 continue
@@ -128,39 +133,49 @@ def main(rank1, rank0):
             p2 = column_prop(normADJ_train[q1, :])
             q0 = np.random.choice(np.arange(numNode_train), rank0, p=p2)
             support0 = sparse_to_tuple(normADJ_train[q1, :][:, q0])
-            features_inputs = sp.diags(1.0 / (p2[q0] * rank0)).dot(train_features[q0, :])  # selected nodes for approximation
-
+            features_inputs = sp.diags(1.0 / (p2[q0] * rank0)).dot(
+                train_features[q0, :])  # selected nodes for approximation
 
             # Construct feed dictionary
-            feed_dict = construct_feed_dict(features_inputs, [support0, support1], y_train_batch, train_mask_batch,
-                                            placeholders)
+            feed_dict = construct_feed_dict(features_inputs, [support0, support1], y_train_batch,
+                                            train_mask_batch, placeholders)
             feed_dict.update({placeholders['dropout']: FLAGS.dropout})
 
             # Training step
             outs = sess.run([model.opt_op, model.loss, model.accuracy], feed_dict=feed_dict)
 
         # Validation
-        cost, acc, duration = evaluate(features, valSupport, y_val, val_mask, placeholders)
+        cost, acc, _, duration = evaluate(features, valSupport, y_val, val_mask, placeholders)
         cost_val.append(cost)
 
         # # Print results
-        print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
-              "train_acc=", "{:.5f}".format(outs[2]), "val_loss=", "{:.5f}".format(cost),
-              "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t1))
+        print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]), "train_acc=",
+              "{:.5f}".format(outs[2]), "val_loss=", "{:.5f}".format(cost), "val_acc=",
+              "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t1))
 
-        if epoch > FLAGS.early_stopping and cost_val[-1] > np.mean(cost_val[-(FLAGS.early_stopping + 1):-1]):
+        if epoch > FLAGS.early_stopping and cost_val[-1] > np.mean(
+                cost_val[-(FLAGS.early_stopping + 1):-1]):
             # print("Early stopping...")
             break
 
     train_duration = time.time() - t
     # Testing
-    test_cost, test_acc, test_duration = evaluate(features, testSupport, y_test, test_mask,
-                                                  placeholders)
-    print("rank1 = {}".format(rank1), "rank0 = {}".format(rank0), "cost=", "{:.5f}".format(test_cost),
-          "accuracy=", "{:.5f}".format(test_acc), "training time per epoch=", "{:.5f}".format(train_duration/epoch))
+    test_cost, test_acc, test_y_pred, test_duration = evaluate(features, testSupport, y_test,
+                                                               test_mask, placeholders)
+    print("rank1 = {}".format(rank1), "rank0 = {}".format(rank0), "cost=",
+          "{:.5f}".format(test_cost), "accuracy=", "{:.5f}".format(test_acc),
+          "training time per epoch=", "{:.5f}".format(train_duration / epoch))
+
+    test_y_pred = np.array(list(map(lambda x: not (x[0] > x[1]), test_y_pred)))
+    y_test = np.array(list(map(lambda x: not (x[0]), y_test)))
+
+    print("F1-Score of non-Frauds: %f" %
+          f1_score(y_test, test_y_pred, average='binary', pos_label=False))
+    print("F1-Score of Frauds: %f" % f1_score(y_test, test_y_pred, average='binary'))
+    print("F1-Score macro: %f" % f1_score(y_test, test_y_pred, average='macro'))
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     print("DATASET:", FLAGS.dataset)
     for k in [5, 10, 25, 50]:
         main(k, k)
