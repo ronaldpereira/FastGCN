@@ -1,0 +1,21 @@
+DATASET: amlsim
+Epoch: 0001 train_loss= 0.00067 train_acc= 1.00000 val_loss= 0.55081 val_acc= 1.00000 time per batch= 0.00590
+training time by far= 12.89013 epoch = 1 cost= 0.55264 accuracy= 0.99568
+Epoch: 0002 train_loss= 0.00823 train_acc= 1.00000 val_loss= 0.59595 val_acc= 1.00000 time per batch= 0.00597
+Epoch: 0003 train_loss= 0.01198 train_acc= 1.00000 val_loss= 0.60886 val_acc= 1.00000 time per batch= 0.00583
+Epoch: 0004 train_loss= 0.01610 train_acc= 1.00000 val_loss= 0.60902 val_acc= 1.00000 time per batch= 0.00594
+Epoch: 0005 train_loss= 0.01196 train_acc= 1.00000 val_loss= 0.59040 val_acc= 1.00000 time per batch= 0.00598
+Epoch: 0006 train_loss= 0.00267 train_acc= 1.00000 val_loss= 0.59960 val_acc= 1.00000 time per batch= 0.00595
+training time by far= 77.53973 epoch = 6 cost= 0.60079 accuracy= 0.99568
+Epoch: 0007 train_loss= 0.01407 train_acc= 1.00000 val_loss= 0.62248 val_acc= 1.00000 time per batch= 0.00586
+Epoch: 0008 train_loss= 0.02316 train_acc= 1.00000 val_loss= 0.62945 val_acc= 1.00000 time per batch= 0.00582
+Epoch: 0009 train_loss= 0.00129 train_acc= 1.00000 val_loss= 0.57786 val_acc= 1.00000 time per batch= 0.00609
+Epoch: 0010 train_loss= 0.00774 train_acc= 1.00000 val_loss= 0.58182 val_acc= 1.00000 time per batch= 0.00590
+Epoch: 0011 train_loss= 0.00086 train_acc= 1.00000 val_loss= 0.55582 val_acc= 1.00000 time per batch= 0.00590
+training time by far= 141.92707 epoch = 11 cost= 0.55759 accuracy= 0.99568
+Epoch: 0012 train_loss= 0.04067 train_acc= 1.00000 val_loss= 0.59755 val_acc= 1.00000 time per batch= 0.00633
+Epoch: 0013 train_loss= 0.00618 train_acc= 1.00000 val_loss= 0.60087 val_acc= 1.00000 time per batch= 0.00610
+rank1 = 100 cost= 0.60204 accuracy= 0.99568 training time= 168.98298 training time per epoch= 12.99869 test time= 0.03808
+F1-Score of non-Frauds: 0.997837
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498918
