@@ -1,5 +1,5 @@
 DATASET: amlsim
-rank1 = 5 cost= 0.66746 accuracy= 0.99568 training time per epoch= 0.94578 test time= 0.04359
-F1-Score of non-Frauds: 0.997837
+rank1 = 5 cost= 0.67822 accuracy= 0.99607 training time per epoch= 70.38838 test time= 0.53965
+F1-Score of non-Frauds: 0.998029
 F1-Score of Frauds: 0.000000
-F1-Score macro: 0.498918
+F1-Score macro: 0.499015
