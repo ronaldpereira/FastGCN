@@ -3,6 +3,5 @@ scipy==1.1.0
 setuptools==41.6.0
 numpy==1.18.2
 scikit-learn
-tensorflow==1.15.2
 pandas
 tqdm
