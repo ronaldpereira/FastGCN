@@ -1,0 +1,21 @@
+DATASET: amlsim_1k_jan
+rank1 = 25 cost= 0.35089 accuracy= 0.99506 training time per epoch= 0.05418 test time= 0.00953
+F1-Score of non-Frauds: 0.997525
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498762
+rank1 = 50 cost= 0.21156 accuracy= 0.99506 training time per epoch= 0.05211 test time= 0.00947
+F1-Score of non-Frauds: 0.997525
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498762
+rank1 = 100 cost= 0.07301 accuracy= 0.99506 training time per epoch= 0.05376 test time= 0.00810
+F1-Score of non-Frauds: 0.997525
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498762
+rank1 = 200 cost= 0.03750 accuracy= 0.99506 training time per epoch= 0.05505 test time= 0.00748
+F1-Score of non-Frauds: 0.997525
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498762
+rank1 = 400 cost= 0.03556 accuracy= 0.99506 training time per epoch= 0.05821 test time= 0.00817
+F1-Score of non-Frauds: 0.997525
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498762

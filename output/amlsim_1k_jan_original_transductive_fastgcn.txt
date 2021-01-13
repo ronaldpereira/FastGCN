@@ -1,0 +1,22 @@
+DATASET: amlsim_1k_jan
+Epoch: 0001 train_loss= 0.00786 train_acc= 1.00000 val_loss= 0.40029 val_acc= 0.99000 time per batch= 0.00626
+Epoch: 0002 train_loss= 0.20887 train_acc= 0.95000 val_loss= 0.42422 val_acc= 0.99000 time per batch= 0.00590
+Epoch: 0003 train_loss= 0.00993 train_acc= 1.00000 val_loss= 0.41139 val_acc= 0.99000 time per batch= 0.00579
+Epoch: 0004 train_loss= 0.00263 train_acc= 1.00000 val_loss= 0.41712 val_acc= 0.99000 time per batch= 0.00588
+Epoch: 0005 train_loss= 0.02549 train_acc= 1.00000 val_loss= 0.44086 val_acc= 0.99000 time per batch= 0.00582
+Epoch: 0006 train_loss= 0.02159 train_acc= 1.00000 val_loss= 0.47766 val_acc= 0.99000 time per batch= 0.00592
+Epoch: 0007 train_loss= 0.19874 train_acc= 0.95000 val_loss= 0.43951 val_acc= 0.99000 time per batch= 0.00602
+Epoch: 0008 train_loss= 0.00699 train_acc= 1.00000 val_loss= 0.38155 val_acc= 0.99000 time per batch= 0.00595
+Epoch: 0009 train_loss= 0.00982 train_acc= 1.00000 val_loss= 0.43104 val_acc= 0.99000 time per batch= 0.00602
+Epoch: 0010 train_loss= 0.00531 train_acc= 1.00000 val_loss= 0.42655 val_acc= 0.99000 time per batch= 0.00578
+Epoch: 0011 train_loss= 0.00740 train_acc= 1.00000 val_loss= 0.41807 val_acc= 0.99000 time per batch= 0.00578
+Epoch: 0012 train_loss= 0.00307 train_acc= 1.00000 val_loss= 0.38663 val_acc= 0.99000 time per batch= 0.00587
+Epoch: 0013 train_loss= 0.01084 train_acc= 1.00000 val_loss= 0.41480 val_acc= 0.99000 time per batch= 0.00586
+Epoch: 0014 train_loss= 0.00338 train_acc= 1.00000 val_loss= 0.37773 val_acc= 0.99000 time per batch= 0.00578
+Epoch: 0015 train_loss= 0.00701 train_acc= 1.00000 val_loss= 0.40887 val_acc= 0.99000 time per batch= 0.00584
+Epoch: 0016 train_loss= 0.33309 train_acc= 0.95000 val_loss= 0.39868 val_acc= 0.99000 time per batch= 0.00575
+Epoch: 0017 train_loss= 0.02804 train_acc= 1.00000 val_loss= 0.46023 val_acc= 0.99000 time per batch= 0.00584
+rank1 = 400 cost= 0.46156 accuracy= 0.99506 training time= 32.31705 training time per epoch= 1.90100 test time= 0.01033
+F1-Score of non-Frauds: 0.997525
+F1-Score of Frauds: 0.000000
+F1-Score macro: 0.498762
